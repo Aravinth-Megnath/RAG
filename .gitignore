@@ -1,0 +1,14 @@
+rag_env/
+venv/
+myenv/
+
+__pycache__/
+*.pyc
+
+.env
+
+chroma_db/
+
+.streamlit/secrets.toml
+data/*.pdf
+*.log
