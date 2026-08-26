@@ -11,6 +11,6 @@ def initialize_database():
 
     if not os.path.exists(DB_PATH):
 
-        docs = load_pdf("data\Aravinth Meganathan - Data Scientist.pdf")
+        docs = load_pdf("data\hotel_rag_document_v2.pdf")
 
         create_vectorstore(docs)

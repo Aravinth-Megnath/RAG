@@ -1,14 +1,25 @@
+# Virtual environments
 rag_env/
 venv/
 myenv/
 
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 
+# Environment variables / secrets
 .env
+.streamlit/secrets.toml
 
+# Generated vector database
 chroma_db/
 
-.streamlit/secrets.toml
-data/*.pdf
+# Logs
 *.log
+
+# IDE / editor files
+.vscode/
+.idea/
+
+# Hotel document - keep the PDF private if required
+data/*.pdf

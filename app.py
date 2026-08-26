@@ -1,17 +1,38 @@
 import streamlit as st
 
-from services.vector_db import VectorDB
-from services.rag import RAGService
+from services.agent import AgentService
+
 
 # ---------------------------------------------------
 # Page Configuration
 # ---------------------------------------------------
 
 st.set_page_config(
-    page_title="PDF RAG Chatbot",
-    page_icon="📄",
+    page_title="Hotel Reservation Assistant",
+    page_icon="🏨",
     layout="wide"
 )
+
+
+# ---------------------------------------------------
+# Agent
+# ---------------------------------------------------
+
+@st.cache_resource
+def load_agent():
+    return AgentService()
+
+
+agent = load_agent()
+
+
+# ---------------------------------------------------
+# Session State
+# ---------------------------------------------------
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 
 # ---------------------------------------------------
 # Sidebar
@@ -19,53 +40,33 @@ st.set_page_config(
 
 with st.sidebar:
 
-    st.title("📄 PDF RAG")
+    st.title("🏨 Hotel Assistant")
 
     st.markdown("---")
 
-    st.write("### Settings")
-
     if st.button("🗑️ Clear Chat"):
-
         st.session_state.messages = []
-
         st.rerun()
 
     st.markdown("---")
 
-    st.success("Vector Database Loaded")
+    st.info(
+        "You can ask questions about the hotel "
+        "or manage your reservation."
+    )
+
 
 # ---------------------------------------------------
-# Session State
+# Main UI
 # ---------------------------------------------------
 
-if "messages" not in st.session_state:
+st.title("🏨 Hotel Reservation Assistant")
 
-    st.session_state.messages = []
+st.caption(
+    "Ask about the hotel, create a reservation, "
+    "view your reservation, or cancel it."
+)
 
-# ---------------------------------------------------
-# Load Database
-# ---------------------------------------------------
-
-# @st.cache_resource
-def load_chain():
-
-    db = VectorDB.load()
-
-    chain = RAGService.create_chain(db)
-
-    return chain
-
-
-chain = load_chain()
-
-# ---------------------------------------------------
-# Title
-# ---------------------------------------------------
-
-st.title("📄 PDF Question Answering")
-
-st.caption("Ask questions about your PDF")
 
 # ---------------------------------------------------
 # Display Chat History
@@ -74,57 +75,54 @@ st.caption("Ask questions about your PDF")
 for message in st.session_state.messages:
 
     with st.chat_message(message["role"]):
-
         st.markdown(message["content"])
+
 
 # ---------------------------------------------------
 # User Input
 # ---------------------------------------------------
 
-question = st.chat_input("Ask a question about your PDF...")
+user_message = st.chat_input(
+    "Ask something about the hotel..."
+)
 
-if question:
 
-    # Show User Question
+if user_message:
 
+    # Display user message
     st.session_state.messages.append(
         {
             "role": "user",
-            "content": question
+            "content": user_message
         }
     )
 
     with st.chat_message("user"):
+        st.markdown(user_message)
 
-        st.markdown(question)
-
-    # Assistant
-
+    # Agent response
     with st.chat_message("assistant"):
 
-        with st.spinner("Searching document..."):
+        with st.spinner("Thinking..."):
 
             try:
 
-                response = chain.invoke(
-                    {
-                        "input": question
-                    }
-                )
+                response = agent.run(user_message, chat_history=st.session_state.messages)
 
-                answer = response["answer"]
-
-                st.markdown(answer)
+                st.markdown(response)
 
                 st.session_state.messages.append(
                     {
                         "role": "assistant",
-                        "content": answer
+                        "content": response
                     }
                 )
 
             except Exception as e:
 
-                st.error(f"Error: {e}")
+                st.error(
+                    "Sorry, something went wrong. "
+                    "Please try again."
+                )
 
                 print(e)
