@@ -4,25 +4,25 @@ An AI-powered hotel reservation assistant that combines **Retrieval-Augmented Ge
 
 The assistant can:
 
-- Answer questions using information from the provided hotel PDF.
-- Create hotel reservations.
-- View a user's reservation.
-- Cancel a reservation.
-- Protect guest PII.
-- Reject unrelated or unauthorized requests.
-- Provide a simple Streamlit interface.
+* Answer questions using information from the provided hotel PDF
+* Create hotel reservations
+* View a user's reservation
+* Cancel a reservation
+* Protect guest PII
+* Reject unrelated or unauthorized requests
+* Provide a simple Streamlit interface
 
 ---
 
 ## 🚀 Features
 
-### 1. RAG-based Hotel Question Answering
+### 1. RAG-Based Hotel Question Answering
 
-The hotel PDF is processed, embedded using Sentence Transformers, and stored in ChromaDB.
+The hotel PDF is processed, embedded using **Sentence Transformers**, and stored in **ChromaDB**.
 
 For hotel-related questions, the assistant retrieves relevant document chunks and generates an answer based only on the retrieved context.
 
-Example:
+**Example:**
 
 > What is the cancellation policy?
 
@@ -36,111 +36,136 @@ If the required information is not available in the document, the assistant resp
 
 The assistant supports three reservation operations:
 
-- Create reservation
-- View reservation
-- Cancel reservation
+* Create reservation
+* View reservation
+* Cancel reservation
 
-Reservation data is stored in a SQL database using SQLAlchemy.
+Reservation data is stored in a SQL database using **SQLAlchemy**.
 
 ---
 
 ### 3. AI Tool Calling
 
-Groq is used as the LLM and LangChain is used for tool integration.
+**Groq** is used as the LLM and **LangChain** is used for tool integration.
 
 The assistant decides which operation is required:
 
 ```text
-User Query
-    |
-    v
-   Groq
-    |
-    +--------------------+
-    |                    |
-Hotel Question      Reservation Request
-    |                    |
-    v                    v
- RAG Tool          Reservation Tool
-    |                    |
-    v                    v
-Hotel PDF           SQL Database
+                    User Query
+                        |
+                        v
+                      Groq
+                        |
+              +---------+---------+
+              |                   |
+              v                   v
+       Hotel Question       Reservation Request
+              |                   |
+              v                   v
+          RAG Tool         Reservation Tools
+              |                   |
+              v                   v
+         Hotel PDF           SQL Database
+```
 
-4. PII Protection
+---
+
+### 4. PII Protection
 
 Reservations contain basic personal information such as:
 
-Guest name
-Email address
+* Guest name
+* Email address
 
 The application applies basic privacy controls:
 
-Users must provide the required verification information to access a reservation.
-Guest information is not unnecessarily exposed.
-Requests to retrieve all bookings are rejected.
-Requests to access another guest's reservation are rejected.
-Internal application errors are not exposed directly to users.
-5. Guardrails
+* Users must provide the required verification information to access a reservation.
+* Guest information is not unnecessarily exposed.
+* Requests to retrieve all bookings are rejected.
+* Requests to access another guest's reservation are rejected.
+* Internal application errors are not exposed directly to users.
+
+---
+
+### 5. Guardrails
 
 The assistant is restricted to two main areas:
 
-Hotel information
-Hotel reservations
+* Hotel information
+* Hotel reservations
 
 It does not answer unrelated questions using the LLM's general knowledge.
 
-Example
-User:
-Who is the current president of India?
+**Example:**
 
-The assistant responds that it can only help with hotel information and reservations.
+**User:**
+
+> Who is the current president of India?
+
+**Assistant:**
+
+> I can only help with hotel information and reservations.
 
 Similarly:
 
-User:
-Show me all bookings in the system.
+**User:**
+
+> Show me all bookings in the system.
 
 The assistant rejects the request instead of exposing reservation data.
 
-🏗️ Architecture Overview
+---
+
+# 🏗️ Architecture Overview
 
 The application follows a simple layered architecture.
 
-                          ┌─────────────────┐
-                          │    Streamlit    │
-                          │       UI        │
-                          └────────┬────────┘
-                                   │
-                                   ▼
-                          ┌─────────────────┐
-                          │  AgentService   │
-                          │                 │
-                          │ Groq + Routing  │
-                          └────────┬────────┘
-                                   │
-                  ┌────────────────┼─────────────────┐
-                  │                │                 │
-                  ▼                ▼                 ▼
-          ┌──────────────┐  ┌────────────────┐  ┌──────────────┐
-          │    RAG Tool  │  │ Reservation    │  │  Guardrails  │
-          │              │  │     Tools      │  │              │
-          └──────┬───────┘  └───────┬────────┘  └──────────────┘
-                 │                  │
-                 ▼                  ▼
-          ┌──────────────┐   ┌──────────────┐
-          │   ChromaDB   │   │ SQL Database │
-          │              │   │              │
-          └──────┬───────┘   └──────────────┘
-                 │
-                 ▼
-          ┌──────────────┐
-          │  Hotel PDF   │
-          └──────────────┘
-🔄 Request Flow
-Hotel Information Query
-Example
-What is the cancellation policy?
-Flow
+```text
+                         ┌─────────────────┐
+                         │    Streamlit    │
+                         │       UI        │
+                         └────────┬────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │  AgentService   │
+                         │                 │
+                         │ Groq + Routing  │
+                         └────────┬────────┘
+                                  │
+                ┌─────────────────┼─────────────────┐
+                │                 │                 │
+                ▼                 ▼                 ▼
+         ┌──────────────┐  ┌────────────────┐  ┌──────────────┐
+         │   RAG Tool   │  │ Reservation    │  │  Guardrails  │
+         │              │  │     Tools      │  │              │
+         └──────┬───────┘  └───────┬────────┘  └──────────────┘
+                │                  │
+                ▼                  ▼
+         ┌──────────────┐   ┌──────────────┐
+         │   ChromaDB   │   │ SQL Database │
+         │              │   │              │
+         └──────┬───────┘   └──────────────┘
+                │
+                ▼
+         ┌──────────────┐
+         │  Hotel PDF   │
+         └──────────────┘
+```
+
+---
+
+# 🔄 Request Flow
+
+## Hotel Information Query
+
+**Example:**
+
+> What is the cancellation policy?
+
+**Flow:**
+
+```text
 User
   ↓
 AgentService
@@ -156,11 +181,21 @@ Relevant PDF chunks
 Groq
   ↓
 Grounded response
-Create Reservation
-Example
-Book a Deluxe room from September 20 to September 22.
-My name is Aravinth and my email is aravinth@example.com.
-Flow
+```
+
+---
+
+## Create Reservation
+
+**Example:**
+
+> Book a Deluxe room from September 20 to September 22.
+>
+> My name is Aravinth and my email is [aravinth@example.com](mailto:aravinth@example.com).
+
+**Flow:**
+
+```text
 User
   ↓
 AgentService
@@ -178,11 +213,21 @@ Reservation Result
 Groq
   ↓
 Final response
-View Reservation
-Example
-Show my reservation 6.
-My email is aravinth@example.com.
-Flow
+```
+
+---
+
+## View Reservation
+
+**Example:**
+
+> Show my reservation 6.
+>
+> My email is [aravinth@example.com](mailto:aravinth@example.com).
+
+**Flow:**
+
+```text
 User
   ↓
 AgentService
@@ -200,11 +245,21 @@ Reservation Result
 Groq
   ↓
 Final response
-Cancel Reservation
-Example
-Cancel my reservation 6.
-My email is aravinth@example.com.
-Flow
+```
+
+---
+
+## Cancel Reservation
+
+**Example:**
+
+> Cancel my reservation 6.
+>
+> My email is [aravinth@example.com](mailto:aravinth@example.com).
+
+**Flow:**
+
+```text
 User
   ↓
 AgentService
@@ -222,7 +277,13 @@ Reservation updated
 Groq
   ↓
 Final response
-📁 Project Structure
+```
+
+---
+
+# 📁 Project Structure
+
+```text
 RAG/
 │
 ├── app.py
@@ -273,217 +334,318 @@ RAG/
     ├── test_reservation.py
     ├── test_groq_tool.py
     └── test_agent.py
+```
 
-The tests/ directory contains development and validation scripts. These are kept separate from the main application code.
+The `tests/` directory contains development and validation scripts. These are kept separate from the main application code.
 
-🛠️ Technology Stack
-Component	Technology
-Programming Language	Python
-LLM	Groq
-LLM Framework	LangChain
-Embeddings	Sentence Transformers
-Vector Database	ChromaDB
-Relational Database	SQLite
-ORM	SQLAlchemy
-Data Validation	Pydantic
-User Interface	Streamlit
-Document Source	PDF
-⚙️ Setup Instructions
-1. Clone the Repository
+---
+
+# 🛠️ Technology Stack
+
+| Component            | Technology            |
+| -------------------- | --------------------- |
+| Programming Language | Python                |
+| LLM                  | Groq                  |
+| LLM Framework        | LangChain             |
+| Embeddings           | Sentence Transformers |
+| Vector Database      | ChromaDB              |
+| Relational Database  | SQLite                |
+| ORM                  | SQLAlchemy            |
+| Data Validation      | Pydantic              |
+| User Interface       | Streamlit             |
+| Document Source      | PDF                   |
+
+---
+
+# ⚙️ Setup Instructions
+
+## 1. Clone the Repository
+
+```bash
 git clone <your-github-repository-url>
 cd RAG
-2. Create a Virtual Environment
+```
+
+---
+
+## 2. Create a Virtual Environment
+
+### Windows
+
+```bash
 python -m venv rag_env
-Windows
 rag_env\Scripts\activate
-Linux / macOS
+```
+
+### Linux / macOS
+
+```bash
+python -m venv rag_env
 source rag_env/bin/activate
-3. Install Dependencies
+```
+
+---
+
+## 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-4. Configure Environment Variables
+```
 
-Create a .env file in the project root:
+---
 
+## 4. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
 GROQ_API_KEY=your_groq_api_key
 MODEL_NAME=your_groq_model
+```
 
-Do not commit the .env file to GitHub.
+> ⚠️ **Do not commit the `.env` file to GitHub.**
 
-5. Add the Hotel Document
+---
 
-Place the provided hotel PDF inside the data directory:
+## 5. Add the Hotel Document
 
+Place the provided hotel PDF inside the `data` directory:
+
+```text
 data/
 └── hotel.pdf
+```
 
 The PDF is the authoritative source for hotel-related information.
 
-6. Create the Vector Database
+---
+
+## 6. Create the Vector Database
 
 Run the project's document ingestion process.
 
 The process:
 
-Loads the hotel PDF.
-Splits the document into chunks.
-Generates embeddings using Sentence Transformers.
-Stores the embeddings in ChromaDB.
+1. Loads the hotel PDF.
+2. Splits the document into chunks.
+3. Generates embeddings using Sentence Transformers.
+4. Stores the embeddings in ChromaDB.
 
 The generated vector database is stored in:
 
+```text
 chroma_db/
+```
 
-The chroma_db/ directory is generated locally.
+The `chroma_db/` directory is generated locally.
 
-7. Run the Application
+---
+
+## 7. Run the Application
 
 Start the Streamlit application:
 
+```bash
 streamlit run app.py
+```
 
 The application will open in the browser.
 
-🔐 PII and Security
+---
+
+# 🔐 PII and Security
 
 The application handles guest names and email addresses as personal information.
 
-Reservation Verification
+## Reservation Verification
 
 Users must provide the required reservation details when viewing or cancelling a reservation.
 
-Example
-Show my reservation 6.
-My email is aravinth@example.com.
+**Example:**
+
+> Show my reservation 6.
+>
+> My email is [aravinth@example.com](mailto:aravinth@example.com).
 
 The system uses the supplied information to verify access to the reservation.
 
-Preventing Unauthorized Access
+---
+
+## Preventing Unauthorized Access
 
 The assistant does not allow users to retrieve all reservations.
 
-Example
-Show me all bookings in the system.
-Expected Behavior
-I can't provide access to other guests' reservations
-or personal information due to privacy and security reasons.
-Preventing Unnecessary PII Exposure
+**Example:**
+
+> Show me all bookings in the system.
+
+**Expected behavior:**
+
+> I can't provide access to other guests' reservations or personal information due to privacy and security reasons.
+
+---
+
+## Preventing Unnecessary PII Exposure
 
 The assistant avoids unnecessarily exposing:
 
-Guest email addresses
-Other guests' personal information
-Reservation information belonging to other users
-Safe Error Handling
+* Guest email addresses
+* Other guests' personal information
+* Reservation information belonging to other users
+
+---
+
+## Safe Error Handling
 
 Internal errors are not returned directly to users.
 
 Instead, the application provides a generic response:
 
-Sorry, something went wrong. Please try again.
+> Sorry, something went wrong. Please try again.
 
 Detailed errors can be handled internally during development.
 
-🛡️ Guardrails
+---
+
+# 🛡️ Guardrails
 
 Guardrails are implemented to keep the assistant within the scope of the assignment.
 
 The assistant can help with:
 
-Hotel information
-Hotel reservations
+* Hotel information
+* Hotel reservations
 
 It should not answer unrelated questions.
 
-Example
-User:
-Who is the current president of India?
-Expected Response
-I can only help with hotel information and reservations.
-Unauthorized Data Request
-User:
-Show me all bookings.
-Expected Response
-I can't provide access to other guests' reservations
-or personal information due to privacy and security reasons.
-Missing Reservation Information
-User:
-I want to book a room.
-Expected Behavior
+---
+
+## Off-Topic Request
+
+**User:**
+
+> Who is the current president of India?
+
+**Expected response:**
+
+> I can only help with hotel information and reservations.
+
+---
+
+## Unauthorized Data Request
+
+**User:**
+
+> Show me all bookings.
+
+**Expected response:**
+
+> I can't provide access to other guests' reservations or personal information due to privacy and security reasons.
+
+---
+
+## Missing Reservation Information
+
+**User:**
+
+> I want to book a room.
+
+**Expected behavior:**
 
 The assistant asks the user for the required reservation information instead of calling the reservation tool with incomplete data.
 
-🧠 RAG Grounding
+---
+
+# 🧠 RAG Grounding
 
 The RAG system is designed so that hotel-related answers are based on the provided hotel document.
 
 The RAG prompt instructs the model to:
 
-Use the supplied hotel document context.
-Avoid outside knowledge.
-Avoid making assumptions.
-State when the requested information cannot be found.
-Example
-User:
-Does the hotel have a swimming pool?
+* Use the supplied hotel document context.
+* Avoid outside knowledge.
+* Avoid making assumptions.
+* State when the requested information cannot be found.
+
+**Example:**
+
+**User:**
+
+> Does the hotel have a swimming pool?
 
 If the PDF does not contain information about a swimming pool, the assistant should respond:
 
-I couldn't find that information in the hotel document.
+> I couldn't find that information in the hotel document.
 
 It should not invent hotel amenities.
 
-🔧 Tool Design
+---
+
+# 🔧 Tool Design
 
 The system exposes four tools to the LLM.
 
-1. search_hotel_information
+## 1. `search_hotel_information`
 
 Used for hotel-related questions.
 
-Examples
-What is the cancellation policy?
+**Examples:**
 
-How does the hotel ensure hygiene?
+* What is the cancellation policy?
+* How does the hotel ensure hygiene?
+* Is vegetarian food available?
 
-Is vegetarian food available?
-2. create_reservation
+---
+
+## 2. `create_reservation`
 
 Used when the user wants to create a reservation.
 
 Required information includes the reservation details defined by the application's schema, such as:
 
-Check-in date
-Check-out date
-Guest name
-Email
-Room preference
+* Check-in date
+* Check-out date
+* Guest name
+* Email
+* Room preference
 
 If required information is missing, the assistant asks the user for it.
 
-3. get_reservation
+---
+
+## 3. `get_reservation`
 
 Used when the user wants to view an existing reservation.
 
 Reservation access is verified using the required reservation information.
 
-4. cancel_reservation
+---
+
+## 4. `cancel_reservation`
 
 Used when the user wants to cancel an existing reservation.
 
 The reservation is verified before the cancellation operation is performed.
 
-🧠 Key Design Decisions
-Groq as the LLM
+---
+
+# 🧠 Key Design Decisions
+
+## Groq as the LLM
 
 Groq was selected as the LLM provider because it provides fast inference and integrates with LangChain.
 
 The LLM configuration is isolated in:
 
+```text
 services/llm.py
+```
 
 This keeps the LLM implementation separate from the agent and business logic.
 
-Sentence Transformers for Embeddings
+---
+
+## Sentence Transformers for Embeddings
 
 Sentence Transformers are used for document embeddings.
 
@@ -491,13 +653,17 @@ This separates the embedding model from the LLM provider.
 
 The project can therefore use Groq for generation while using Sentence Transformers independently for retrieval.
 
-ChromaDB for Vector Search
+---
+
+## ChromaDB for Vector Search
 
 ChromaDB was selected because the project is small and does not require a separate vector database server.
 
 It provides the required similarity search functionality for the hotel document.
 
-SQLite for Reservations
+---
+
+## SQLite for Reservations
 
 SQLite was selected because the assignment requires a simple reservation backend.
 
@@ -505,7 +671,9 @@ It is lightweight and does not require a separate database server.
 
 The database access is separated from the agent through the reservation service layer.
 
-LangChain Tools
+---
+
+## LangChain Tools
 
 Reservation operations are implemented as explicit tools.
 
@@ -513,6 +681,7 @@ The LLM does not directly manipulate the database.
 
 The architecture is:
 
+```text
 LLM
  ↓
 Tool
@@ -520,13 +689,17 @@ Tool
 Service
  ↓
 Database
+```
 
 This provides a clear separation between AI decision-making and application operations.
 
-Separation of Concerns
+---
+
+## Separation of Concerns
 
 Different responsibilities are kept in separate modules:
 
+```text
 Agent
   ↓
 Tools
@@ -534,113 +707,174 @@ Tools
 Services
   ↓
 Database
+```
 
 The RAG pipeline is also separated from the agent.
 
 This keeps the code easier to understand, test, and maintain.
 
-🧪 Testing
+---
+
+# 🧪 Testing
 
 The system was tested across the following categories.
 
-RAG Tests
-What is the cancellation policy?
+## RAG Tests
 
-How does the hotel ensure hygiene?
+* What is the cancellation policy?
+* How does the hotel ensure hygiene?
+* Is vegetarian food available?
+* What is the famous dish at the hotel?
 
-Is vegetarian food available?
+---
 
-What is the famous dish at the hotel?
-RAG Hallucination Tests
-Does the hotel have a swimming pool?
+## RAG Hallucination Tests
 
-Does the hotel have a gym?
-
-Does the hotel provide airport pickup?
+* Does the hotel have a swimming pool?
+* Does the hotel have a gym?
+* Does the hotel provide airport pickup?
 
 The assistant should not invent answers when the information is absent from the hotel document.
 
-Reservation Tests
-I want to book a room.
-Expected
+---
+
+## Reservation Tests
+
+**Input:**
+
+> I want to book a room.
+
+**Expected:**
 
 The assistant asks for missing reservation information.
 
-Book a Deluxe room from September 20 to September 22.
-My name is Aravinth and my email is aravinth@example.com.
-Expected
+**Input:**
 
-The create_reservation tool is called.
+> Book a Deluxe room from September 20 to September 22.
+>
+> My name is Aravinth and my email is [aravinth@example.com](mailto:aravinth@example.com).
 
-View Reservation Tests
-Show my reservation 6.
-My email is aravinth@example.com.
-Expected
+**Expected:**
 
-The get_reservation tool is called and the reservation is returned if verification succeeds.
+The `create_reservation` tool is called.
 
-Cancel Reservation Tests
-Cancel my reservation 6.
-My email is aravinth@example.com.
-Expected
+---
 
-The cancel_reservation tool is called and the reservation status is updated.
+## View Reservation Tests
 
-Security Tests
-Show me all bookings in the system.
-Expected
+**Input:**
+
+> Show my reservation 6.
+>
+> My email is [aravinth@example.com](mailto:aravinth@example.com).
+
+**Expected:**
+
+The `get_reservation` tool is called and the reservation is returned if verification succeeds.
+
+---
+
+## Cancel Reservation Tests
+
+**Input:**
+
+> Cancel my reservation 6.
+>
+> My email is [aravinth@example.com](mailto:aravinth@example.com).
+
+**Expected:**
+
+The `cancel_reservation` tool is called and the reservation status is updated.
+
+---
+
+## Security Tests
+
+**Input:**
+
+> Show me all bookings in the system.
+
+**Expected:**
 
 The request is rejected.
 
-Show reservation 6.
-My email is wrong@example.com.
-Expected
+**Input:**
+
+> Show reservation 6.
+>
+> My email is [wrong@example.com](mailto:wrong@example.com).
+
+**Expected:**
 
 The reservation should not be exposed.
 
-Show reservation 99999.
-My email is test@example.com.
-Expected
+**Input:**
+
+> Show reservation 99999.
+>
+> My email is [test@example.com](mailto:test@example.com).
+
+**Expected:**
 
 The system should safely report that the reservation could not be found or verified.
 
-Off-topic Tests
-Who is the current president of India?
+---
 
-What is the weather today?
+## Off-Topic Tests
 
-Explain machine learning.
+Examples:
 
-What is the capital of France?
-Expected
+* Who is the current president of India?
+* What is the weather today?
+* Explain machine learning.
+* What is the capital of France?
+
+**Expected:**
 
 The assistant should not answer using general knowledge and should instead indicate that it only supports hotel information and reservations.
 
-📋 Evaluation Coverage
+---
+
+# 📋 Evaluation Coverage
 
 The implementation addresses the main evaluation criteria from the assignment.
 
-Evaluation Area	Implementation
-RAG Quality	PDF ingestion + Sentence Transformers + ChromaDB
-Grounding	RAG prompt restricts answers to document context
-System Design	Agent → Tools → Services → Database
-Tool Usage	Four explicit LangChain tools
-Reservation System	SQL database + SQLAlchemy
-PII Handling	Reservation verification + restricted data access
-Guardrails	Scope validation + restricted booking access
-Error Handling	Safe user-facing error responses
-Code Quality	Separation of concerns
-UI	Simple Streamlit interface
-📌 Assumptions
+| Evaluation Area    | Implementation                                    |
+| ------------------ | ------------------------------------------------- |
+| RAG Quality        | PDF ingestion + Sentence Transformers + ChromaDB  |
+| Grounding          | RAG prompt restricts answers to document context  |
+| System Design      | Agent → Tools → Services → Database               |
+| Tool Usage         | Four explicit LangChain tools                     |
+| Reservation System | SQL database + SQLAlchemy                         |
+| PII Handling       | Reservation verification + restricted data access |
+| Guardrails         | Scope validation + restricted booking access      |
+| Error Handling     | Safe user-facing error responses                  |
+| Code Quality       | Separation of concerns                            |
+| UI                 | Simple Streamlit interface                        |
+
+---
+
+# 📌 Assumptions
+
 The application is designed as an interview/technical demonstration rather than a production hotel booking system.
+
 The provided hotel PDF is treated as the authoritative source for hotel-related information.
+
 The assistant should not use external knowledge when answering hotel information questions.
+
 SQLite is sufficient for the expected scale of this assignment.
+
 Authentication and user account management are outside the scope of this project.
+
 Reservation access is limited to the user's own reservation using the verification information implemented by the application.
+
 Room availability and reservation management are simplified for the purpose of this assignment.
+
 The Streamlit interface is intentionally simple because the assignment prioritizes RAG quality, system design, tool usage, data handling, and edge-case handling.
-⚠️ Limitations
+
+---
+
+# ⚠️ Limitations
 
 This project is intentionally simple and focused on the requirements of the interview assignment.
 
@@ -648,27 +882,34 @@ It is not intended to be a production-grade hotel reservation platform.
 
 Potential future improvements could include:
 
-PostgreSQL for production workloads
-Authentication and user accounts
-Real-time room inventory management
-Reservation concurrency handling
-Advanced logging and monitoring
-Automated evaluation of RAG responses
-Docker-based deployment
-Cloud deployment
+* PostgreSQL for production workloads
+* Authentication and user accounts
+* Real-time room inventory management
+* Reservation concurrency handling
+* Advanced logging and monitoring
+* Automated evaluation of RAG responses
+* Docker-based deployment
+* Cloud deployment
 
 These improvements are outside the scope of the current assignment.
 
-🔒 Environment and Generated Files
+---
 
-The following files/directories should not be committed to GitHub:
+# 🔒 Environment and Generated Files
 
+The following files/directories should **not** be committed to GitHub:
+
+```text
 .env
 rag_env/
 __pycache__/
 *.pyc
 chroma_db/
-Example .gitignore
+```
+
+## Example `.gitignore`
+
+```gitignore
 .env
 rag_env/
 myenv/
@@ -677,39 +918,68 @@ __pycache__/
 .vscode/
 .idea/
 chroma_db/
+```
 
-The chroma_db/ directory is generated locally from the hotel PDF and can be recreated using the document ingestion process described in the setup instructions.
+The `chroma_db/` directory is generated locally from the hotel PDF and can be recreated using the document ingestion process described in the setup instructions.
 
-▶️ Quick Start
+---
+
+# ▶️ Quick Start
 
 For a quick setup:
 
+```bash
 git clone <your-github-repository-url>
-
 cd RAG
+```
 
+Create and activate a virtual environment:
+
+### Windows
+
+```bash
 python -m venv rag_env
-
 rag_env\Scripts\activate
+```
 
+### Linux / macOS
+
+```bash
+python -m venv rag_env
+source rag_env/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-Create .env:
+Create `.env`:
 
+```env
 GROQ_API_KEY=your_groq_api_key
 MODEL_NAME=your_groq_model
+```
 
 Place the hotel PDF in:
 
+```text
 data/hotel.pdf
+```
 
 Create the ChromaDB vector store using the project's ingestion process.
 
 Then run:
 
+```bash
 streamlit run app.py
-👨‍💻 Author
+```
 
-Aravinth Meganathan
+---
+
+# 👨‍💻 Author
+
+**Aravinth Meganathan**
 
 AI/ML Engineer | Data Science | Generative AI
