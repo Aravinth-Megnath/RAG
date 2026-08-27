@@ -2,62 +2,36 @@ from sqlalchemy.orm import Session
 from database.models import Reservation
 from database.schemas import CreateReservation
 
+
 class ReservationService:
-    @staticmethod
-    def create_reservation(
-        db:Session,
-        reservation_data:CreateReservation
-        ) -> Reservation:
+    """Database Access Object (DAO) for handling hotel reservation CRUD operations."""
 
-        reservation = Reservation(
-            guest_name=reservation_data.guest_name,
-            email=reservation_data.email,
-            check_in=reservation_data.check_in,
-            check_out=reservation_data.check_out,
-            room_preference=reservation_data.room_preference
-
-        )
-
+    @classmethod
+    def create_reservation(cls, db: Session, reservation_data: CreateReservation) -> Reservation:
+        """Creates a new reservation record in the database."""
+        reservation = Reservation(**reservation_data.model_dump())
         db.add(reservation)
         db.commit()
         db.refresh(reservation)
         return reservation
 
-    @staticmethod
-    def get_reservation(
-        db:Session,
-        reservation_id:int,
-        email:str
-        ) -> Reservation | None:
-
-        reservation = (
-            db.query(Reservation).filter(
-                Reservation.id == reservation_id,
-                Reservation.email == email
-            ).first()
+    @classmethod
+    def get_reservation(cls, db: Session, reservation_id: int, email: str) -> Reservation | None:
+        """Retrieves a reservation by ID and guest email."""
+        return (
+            db.query(Reservation)
+            .filter(Reservation.id == reservation_id, Reservation.email == email)
+            .first()
         )
 
-        return reservation
-
-    @staticmethod
-    def cancel_reservation(
-        db: Session,
-        reservation_id: int,
-        email: str
-    )->Reservation | None:
-
-        reservation = (
-            db.query(Reservation).filter(
-                Reservation.id == reservation_id,
-                Reservation.email == email
-            ).first()
-        )
-
-        if reservation is None:
+    @classmethod
+    def cancel_reservation(cls, db: Session, reservation_id: int, email: str) -> Reservation | None:
+        """Cancels an existing reservation if found."""
+        reservation = cls.get_reservation(db, reservation_id, email)
+        if not reservation:
             return None
 
         reservation.status = "CANCELLED"
-
         db.commit()
         db.refresh(reservation)
         return reservation
