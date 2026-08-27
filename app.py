@@ -1,128 +1,55 @@
 import streamlit as st
-
 from services.agent import AgentService
 
-
-# ---------------------------------------------------
-# Page Configuration
-# ---------------------------------------------------
-
-st.set_page_config(
-    page_title="Hotel Reservation Assistant",
-    page_icon="🏨",
-    layout="wide"
-)
+# Page Setup
+st.set_page_config(page_title="Hotel Reservation Assistant", page_icon="🏨", layout="wide")
 
 
-# ---------------------------------------------------
-# Agent
-# ---------------------------------------------------
-
+# Cache Agent Initialization
 @st.cache_resource
-def load_agent():
+def get_agent():
     return AgentService()
 
 
-agent = load_agent()
+agent = get_agent()
 
-
-# ---------------------------------------------------
-# Session State
-# ---------------------------------------------------
-
+# Initialize Chat Session History
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-
-# ---------------------------------------------------
-# Sidebar
-# ---------------------------------------------------
-
+# Sidebar Controls
 with st.sidebar:
-
     st.title("🏨 Hotel Assistant")
-
     st.markdown("---")
-
     if st.button("🗑️ Clear Chat"):
         st.session_state.messages = []
         st.rerun()
-
     st.markdown("---")
+    st.info("Ask questions about hotel policies, check-in times, or manage your reservation.")
 
-    st.info(
-        "You can ask questions about the hotel "
-        "or manage your reservation."
-    )
-
-
-# ---------------------------------------------------
-# Main UI
-# ---------------------------------------------------
-
+# Main Interface Header
 st.title("🏨 Hotel Reservation Assistant")
+st.caption("Ask about the hotel, create a reservation, view your booking, or cancel it.")
 
-st.caption(
-    "Ask about the hotel, create a reservation, "
-    "view your reservation, or cancel it."
-)
+# Render Chat History
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-
-# ---------------------------------------------------
-# Display Chat History
-# ---------------------------------------------------
-
-for message in st.session_state.messages:
-
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-
-# ---------------------------------------------------
-# User Input
-# ---------------------------------------------------
-
-user_message = st.chat_input(
-    "Ask something about the hotel..."
-)
-
-
-if user_message:
-
-    # Display user message
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": user_message
-        }
-    )
-
+# User Chat Input Handler
+if prompt := st.chat_input("Ask something about the hotel..."):
+    # Display user input
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(user_message)
+        st.markdown(prompt)
 
-    # Agent response
+    # Generate assistant response
     with st.chat_message("assistant"):
-
         with st.spinner("Thinking..."):
-
             try:
-
-                response = agent.run(user_message, chat_history=st.session_state.messages)
-
+                response = agent.run(prompt, chat_history=st.session_state.messages)
                 st.markdown(response)
-
-                st.session_state.messages.append(
-                    {
-                        "role": "assistant",
-                        "content": response
-                    }
-                )
-
+                st.session_state.messages.append({"role": "assistant", "content": response})
             except Exception as e:
-
-                st.error(
-                    "Sorry, something went wrong. "
-                    "Please try again."
-                )
-
-                print(e)
+                st.error("Sorry, something went wrong. Please try again.")
+                print(f"App error: {e}")
