@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from config import DB_PATH
 
-from embeddings.embedding import get_embedding
+from services.embeddings import get_embedding
 
 
 def create_vectorstore(documents):
