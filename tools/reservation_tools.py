@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from langchain_core.tools import tool
 from database.database import session_local
 from database.schemas import CreateReservation
-from services_reservation.reservation_services import ReservationService
+from services.reservation_services import ReservationService
 
 
 @contextmanager

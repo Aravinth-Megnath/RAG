@@ -1,6 +1,5 @@
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from config import DB_PATH
 
