@@ -21,5 +21,4 @@ chroma_db/
 .vscode/
 .idea/
 
-# Hotel document - keep the PDF private if required
 data/*.pdf
